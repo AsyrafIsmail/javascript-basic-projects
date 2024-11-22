@@ -10,9 +10,10 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
 
     const task = taskInput.value.trim();
+    const priority = document.getElementById("priority-select").value;
 
     if (task) {
-      addTask(task); 
+      addTask(task, priority); 
       taskInput.value = "";
     } else {
       alert("Task cannot be empty!"); 
@@ -20,18 +21,19 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Add Task
-  function addTask(task, isPriority = false) {
+  function addTask(task, priority) {
 
     const taskItem = document.createElement("li");
     taskItem.className = "task-item";
+    taskItem.dataset.priority = priority;
+    taskItem.dataset.timestamp = Date.now();
 
-    if (isPriority) {
-      taskItem.classList.add("priority");
-    }
+    const timestamp = new Date().toLocaleString();
 
     taskItem.innerHTML = `
       <span class="task-text">${task}</span>
-      <button class="priority-btn">${isPriority ? "Unmark Priority" : "Prioritize"}</button>
+      <span class="task-priority">${priority.toUpperCase()}</span>
+      <span class="task-timestamp">${timestamp}</span>
       <button class="edit-btn">Edit</button>
       <button class="delete-btn">Delete</button>
     `;
@@ -44,95 +46,97 @@ document.addEventListener("DOMContentLoaded", function () {
       editTask(taskItem);
     });
 
-    taskItem.querySelector(".priority-btn").addEventListener("click", function() {
-      togglePriority(taskItem);
-    })
-
     taskList.appendChild(taskItem);
-
     sortTasks();
   }
 
   // Edit Task
   function editTask(taskItem) {
     const taskText = taskItem.querySelector(".task-text");
+    const taskPriority = taskItem.querySelector(".task-priority");
+    const taskTimestamp = taskItem.querySelector(".task-timestamp");
 
-    if (!taskText) {
-      console.error("No task text element found! Cannot edit task.");
-      return;
-    }
+    if (!taskText || !taskPriority || !taskTimestamp) return;
 
     const currentText = taskText.textContent;
+    const currentPriority = taskPriority.textContent.toLowerCase();
 
     const inputField = document.createElement("input");
     inputField.type = "text";
     inputField.value = currentText;
     inputField.className = "edit-input";
 
+    const prioritySelect = document.createElement("select");
+    prioritySelect.innerHTML = `
+    <option value="low" ${currentPriority === "low" ? "selected" : ""}>Low</option>
+    <option value="medium" ${currentPriority === "medium" ? "selected" : ""}>Medium</option>
+    <option value="high" ${currentPriority === "high" ? "selected" : ""}>High</option>
+    `
+
     taskItem.replaceChild(inputField, taskText);
+    taskItem.replaceChild(prioritySelect, taskPriority);
+
 
     const editBtn = taskItem.querySelector(".edit-btn");
     editBtn.textContent = "Save";
 
-    const newSaveHandler = function () {
-      saveTask(taskItem, inputField);
+    editBtn.onclick = function() {
+      saveTask(taskItem, inputField, prioritySelect);
     };
-    editBtn.replaceWith(editBtn.cloneNode(true));
-    taskItem.querySelector(".edit-btn").addEventListener("click", newSaveHandler);
+
+    sortTasks();
   }
 
   // Save Task
-  function saveTask(taskItem, inputField) {
+  function saveTask(taskItem, inputField, prioritySelect) {
     const updatedText = inputField.value.trim();
+    const updatedPriority = prioritySelect.value;
 
-    if (updatedText) {
+    if (updatedText || updatedPriority) {
       const taskText = document.createElement("span");
       taskText.className = "task-text"; 
       taskText.textContent = updatedText;
 
+      const taskPriority = document.createElement("span")
+      taskPriority.className = "task-priority";
+      taskPriority.textContent = updatedPriority.toUpperCase();
+
       taskItem.replaceChild(taskText, inputField);
+      taskItem.replaceChild(taskPriority, prioritySelect);
+
+      taskItem.dataset.priority = updatedPriority;
 
       const editBtn = taskItem.querySelector(".edit-btn");
       editBtn.textContent = "Edit";
 
       const newEditHandler = function () {
-        editTask(taskItem);
-      };
-      editBtn.replaceWith(editBtn.cloneNode(true));
-      taskItem.querySelector(".edit-btn").addEventListener("click", newEditHandler);
+      editTask(taskItem);
+    };
+    editBtn.replaceWith(editBtn.cloneNode(true));
+    taskItem.querySelector(".edit-btn").addEventListener("click", newEditHandler);
+
+    sortTasks();
     } else {
       alert("Task cannot be empty!");
     }
-  }
-
-  // Toggle Priority
-  function togglePriority(taskItem) {
-    const isPriority = taskItem.classList.contains("priority");
-    const priorityBtn = taskItem.querySelector(".priority-btn");
-
-    if (isPriority) {
-      taskItem.classList.remove("priority");
-      priorityBtn.textContent = "Prioritze";
-    } else {
-      taskItem.classList.add("priority");
-      priorityBtn.textContent = "Unmark Priority";
-    }
-
-    sortTasks();
   }
 
   function sortTasks() {
     const tasks = Array.from(taskList.children);
 
     tasks.sort((a, b) => {
-      const aIsPriority = a.classList.contains("priority");
-      const bIsPriority = b.classList.contains("priority");
+      const priorityLevels = { high: 3, medium: 2, low: 1 };
+      const priorityA = priorityLevels[a.dataset.priority];
+      const priorityB = priorityLevels[b.dataset.priority];
 
-      if (aIsPriority && !bIsPriority) return -1;
-      if (!aIsPriority && bIsPriority) return 1;
-      return 0;
+      if (priorityA === priorityB) {
+        return b.dataset.timestamp - a.dataset.timestamp;
+      }
+
+      return priorityB - priorityA;
     });
 
+    taskList.innerHTML = "";
     tasks.forEach((task) => taskList.appendChild(task));
   }
 

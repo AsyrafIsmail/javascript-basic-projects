@@ -95,3 +95,20 @@ body {
     background-color: #e5533f
   }
   
+  .task-item[data-priority="high"] {
+    background-color: #ffcccc;
+  }
+  .task-item[data-priority="medium"] {
+    background-color: #fff2cc;
+  }
+  .task-item[data-priority="low"] {
+    background-color: #ccffcc;
+  }
+
+  .task-timestamp {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 4px;
+  }
+  
