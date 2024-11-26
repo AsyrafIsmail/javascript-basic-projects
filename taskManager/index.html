@@ -10,15 +10,25 @@
   <div class="container">
     <h1>Task Manager</h1>
     <form id="task-form">
-      <input type="text" id="task-input" placeholder="Enter a new task" required>
-      <select id="priority-select">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
+      <div class="form-group">
+        <input type="text" id="task-input" placeholder="Enter a new task" required />
+        <select id="priority-select">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="time-to-finish">Time to Finish:</label>
+        <select id="time-unit">
+          <option value="minutes">Minutes</option>
+          <option value="hours">Hours</option>
+          <option value="days">Days</option>
+        </select>
+        <input type="number" id="time-value" min="1" placeholder="Enter time" required />
+      </div>
       <button type="submit" id="add-task-btn">Add Task</button>
     </form>
-
     <ul id="task-list"></ul>
   </div>
 
